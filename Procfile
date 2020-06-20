@@ -1,1 +1,1 @@
-web: voila --port=$PORT --no-browser
+web: gunicorn app:server
