@@ -21,7 +21,13 @@ month_dict = {
   '12': 'December'
 }
 
-
+title_style = {
+  'font': {'family':'Roboto, Open Sans, Helvetica, Arial', 'size': 20},
+  'y': 0.9,
+  'x': 0.5,
+  'xanchor': 'center',
+  'yanchor': 'top'
+}
 
 def quick_sunburst (df, maxdepth=-1):
     columns_list = list(df.columns) 
@@ -100,10 +106,11 @@ def make_login_chart(df, month=None, association=None, status=None, frequency='d
               color_continuous_midpoint=total_logins_by_frequency['number of logins'].median(),
               range_color=[0, total_logins_by_frequency['number of logins'].max()],
               title=title)
-      fig.update_xaxes(rangeslider_visible=True)
+      #fig.update_xaxes(rangeslider_visible=True)
       fig.update_layout(showlegend=False)
       #NOTE: hide color bar https://github.com/plotly/plotly.py/issues/1858
       fig.layout.coloraxis.showscale=False
+      fig.update_layout(title=title_style)
       return fig
   elif 'Scatter' in chart_type:
       fig = px.scatter(total_logins_by_frequency, 
@@ -116,6 +123,7 @@ def make_login_chart(df, month=None, association=None, status=None, frequency='d
               title=title)
       fig.update_xaxes(rangeslider_visible=True)
       fig.layout.coloraxis.showscale=False
+      fig.update_layout(title=title_style)
       return fig
   elif 'Line' in chart_type:
       fig = px.line(total_logins_by_frequency, 
@@ -123,6 +131,7 @@ def make_login_chart(df, month=None, association=None, status=None, frequency='d
               y = 'number of logins', 
               title=title)
       fig.update_xaxes(rangeslider_visible=True)
+      fig.update_layout(title=title_style)
       return fig
 
 def make_data_usage_chart_title(association, course_id, month):
@@ -153,6 +162,7 @@ def make_aggregate_data_usage_chart(df, association=None, course_id=None, month=
       title=title)
   #remove vertical annotations
   fig.layout.annotations=None
+  fig.update_layout(title=title_style)
   return fig
 
 def make_data_bar_chart_facetted_by(df, colname, association=None, course_id=None, month=None):
@@ -164,9 +174,10 @@ def make_data_bar_chart_facetted_by(df, colname, association=None, course_id=Non
           hover_data = {'paper_id' : False, 'type' : False, 'course_id' : False},
           barmode='group', 
           labels={'size_in_mb': 'Size in MB'}, 
-          facet_row=colname,
+          #facet_row=colname,
           title=title)
   fig.layout.annotations=None
+  fig.update_layout(title=title_style)
   return fig
 
 def get_course_filter_options(df, association):

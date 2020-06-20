@@ -50,13 +50,13 @@ app.layout = html.Div([
     ),
     #NOTE: title
     html.Div([
-      html.H1('OB3 Admin Dashboard')
+      html.H1('PBT Admin Dashboard')
     ],
     className='title-container'
     ),
     #NOTE: external link
     html.Div([
-      html.A('Learn More', href='https://www.ob3.io/', target='_blank')
+      html.A('Learn More', href='https://dash.plotly.com/', target='_blank')
     ],
     className='link-container'
     )
@@ -131,7 +131,7 @@ app.layout = html.Div([
     html.Div([
       dcc.Dropdown(
         id='login-chart-status-filter',
-        options=[{'label': i, 'value': i} for i in ['student', 'teacher', 'alumnus']],
+        options=[{'label': i.capitalize(), 'value': i} for i in ['student', 'teacher', 'alumnus']],
         placeholder='Select Status'
       )
     ]),
@@ -139,7 +139,7 @@ app.layout = html.Div([
     html.Div([
       dcc.Dropdown(
         id='login-chart-frequency-filter',
-        options=[{'label': i, 'value': i} for i in ['Daily', 'Weekly']],
+        options=[{'label': i.capitalize(), 'value': i} for i in ['Daily', 'Weekly']],
         value='Daily',
         clearable=False,
       )
@@ -148,7 +148,7 @@ app.layout = html.Div([
     html.Div([
       dcc.Dropdown(
         id='login-chart-chart-type-filter',
-        options=[{'label': i, 'value': i} for i in ['Bar Chart', 'Line Chart', 'Scatter Chart']],
+        options=[{'label': i.capitalize(), 'value': i} for i in ['Bar Chart', 'Line Chart', 'Scatter Chart']],
         value='Bar Chart',
         clearable=False,
       )
@@ -378,12 +378,11 @@ def display_total_new_resources_by_association(jsonified_df, association):
 
 #NOTE: run app in debug mode
 if __name__ == '__main__':
-  app.run_server(debug=True)
-  
-  '''app.run_server(debug=False,
+  app.run_server(debug=False,
                  dev_tools_ui=False,
-                 dev_tools_props_check=False)'''
-
+                 dev_tools_props_check=False)
+#app.run_server(debug=True)
+  
 
 #TODO: https://dash.plotly.com/deployment try to deploy / polish display
 

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
 :root {
   box-sizing: border-box;
 }
@@ -14,7 +16,7 @@ body {
   font-size: 1.5em; /* currently ems cause chrome bug misinterpreting rems on body element */
   line-height: 1.6;
   font-weight: 400;
-  font-family: "Open Sans", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Roboto", "Open Sans", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: rgb(35, 155, 211); 
   background-color: #05445E;
 }
@@ -43,7 +45,7 @@ a:hover {
 h1 { font-size: 4.5rem; line-height: 1.2;  letter-spacing: -.1rem; margin-bottom: 1.8rem; margin-top: 1.8rem; }
 h2 { font-size: 3.6rem; line-height: 1.2; letter-spacing: -.1rem; margin-bottom: 1.8rem; margin-top: 1.8rem;}
 h3 { font-size: 3.0rem; line-height: 1.3;  letter-spacing: -.1rem; margin-bottom: 1.5rem; margin-top: 1.5rem;}
-h4 { font-size: 2.6rem; line-height: 1.35; letter-spacing: -.08rem; margin-bottom: 1.2rem; margin-top: 1.2rem;}
+h4 { font-size: 1.75rem; line-height: 1.35; letter-spacing: -.08rem; margin-bottom: 1.2rem; margin-top: 1.2rem;}
 h5 { font-size: 2.2rem; line-height: 1.5;  letter-spacing: -.05rem; margin-bottom: 0.6rem; margin-top: 0.6rem;}
 h6 { font-size: 2.0rem; line-height: 1.6;  letter-spacing: 0; margin-bottom: 0.75rem; margin-top: 0.75rem;}
 
@@ -149,6 +151,12 @@ p {
   flex-grow: 2;
 }
 
+.title-container > h1 {
+  font-weight: bolder;
+  font-size: 6rem;
+}
+
+
 .logo {
   width: 120px;
   height: 120px;
@@ -162,6 +170,10 @@ p {
   margin-top: 1.8rem;
 }
 
+.link-container > a {
+  font-size: 2rem;
+}
+
 /*ANCHOR: General Filter Container
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
@@ -173,12 +185,9 @@ p {
   flex-grow: 1;
   margin: .25em;
   padding: 0.5em;
-  font-size: large;
-  font-weight: 800;
+  font-size: medium;
 }
 
-.general-filter-container > div:nth-child(1) {
-}
 
 /*ANCHOR: Stat Boxes
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -193,7 +202,7 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 0 auto;
+  margin: 0 auto 2em;
 }
 
 .stat-container > * {
@@ -203,6 +212,7 @@ p {
 .stat-container > h2 {
   font-size: 4em;
   font-weight: bold;
+  margin-bottom: 0;
 }
 
 .stat-container > h4 {
@@ -225,7 +235,7 @@ p {
   flex-grow: 1;
   margin: .25em;
   padding: 0.5em;
-  font-size: large;
+  font-size: medium;
 }
 
 .login-chart-filter-container > div > p,

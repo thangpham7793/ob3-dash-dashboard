@@ -50,13 +50,13 @@ app.layout = html.Div([
     ),
     #NOTE: title
     html.Div([
-      html.H1('OB3 Admin Dashboard')
+      html.H1('PBT Admin Dashboard')
     ],
     className='title-container'
     ),
     #NOTE: external link
     html.Div([
-      html.A('Learn More', href='https://www.ob3.io/', target='_blank')
+      html.A('Learn More', href='https://dash.plotly.com/', target='_blank')
     ],
     className='link-container'
     )
