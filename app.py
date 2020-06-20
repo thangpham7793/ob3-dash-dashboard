@@ -36,7 +36,8 @@ month_dict = {
 
 #external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 #external_stylesheets=external_stylesheets
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, suppress_callback_exceptions=True)
+server = app.server
 
 app.layout = html.Div([
   #NOTE: header div
@@ -156,8 +157,10 @@ app.layout = html.Div([
   className='login-chart-filter-container'
   ),
   
+  
+  
   html.Div([
-    dcc.Graph(id='user_activity_graph'),
+    dcc.Loading(children=html.Div(id='login-data-and-graph-container'))
   ],
   className='user-activity-graph-container'),
   
@@ -167,7 +170,8 @@ app.layout = html.Div([
       children=[
         dcc.Dropdown(
           id='data-chart-course-filter',
-          placeholder='Select A Course'
+          placeholder='Select A Course',
+          disabled=True
         )
       ])   
   ],
@@ -175,33 +179,40 @@ app.layout = html.Div([
   ),
   
   html.Div([
-    dcc.Graph(id='data_usage_graph'),
+    dcc.Loading(children=html.Div(id='data-usage-data-and-graph-container'))
   ],
   className='data-usage-graph-container'),
-
-  #NOTE: hidden container for storing jsonified login data
-  html.Div(id='jsonified-login-df', style={'display': 'none'}),
-  html.Div(id='jsonified-data-usage-df', style={'display' : 'none'})
+  
 ],
-  className='main-container'
+className='main-container'
 )
 
 #NOTE: refetch login data when a new month is picked
 @app.callback(
-  Output('jsonified-login-df', 'children'),
+  Output('login-data-and-graph-container', 'children'),
   [Input('month-filter', 'value')])
 def get_and_store_login_data(selected_month):
   rows = session.execute(admin_queries['logins_over_time'], [selected_month])
   df = DataFrame(rows)
-  return df.to_json(date_format='iso')
+  jsonified_data = df.to_json(date_format='iso')
+  hidden_data_div = html.Div(id='jsonified-login-df', 
+                             children=jsonified_data, 
+                             style={'display': 'none'})
+  graph=dcc.Graph(id='user_activity_graph')
+  return [hidden_data_div, graph]
 
 @app.callback(
-  Output('jsonified-data-usage-df', 'children'),
+  Output('data-usage-data-and-graph-container', 'children'),
   [Input('month-filter', 'value')])
 def get_and_store_usage_data(selected_month):
   rows = session.execute(admin_queries['data_usage_by_month'], [selected_month])
   df = DataFrame(rows)
-  return df.to_json(date_format='iso')
+  jsonified_data = df.to_json(date_format='iso')
+  hidden_data_div = html.Div(id='jsonified-data-usage-df', 
+                             children=jsonified_data, 
+                             style={'display' : 'none'})
+  graph=dcc.Graph(id='data_usage_graph')
+  return [hidden_data_div, graph]
 
 
 #NOTE: update login chart on new filter
@@ -214,12 +225,12 @@ def get_and_store_usage_data(selected_month):
    Input('login-chart-frequency-filter', 'value')],
   [State('month-filter', 'value')]
 )
-def update_login_chart_on_filter_change(jsonified_login_df, association, status, chart_type, frequency, month):
-  if jsonified_login_df is None:
+def update_login_chart_on_filter_change(jsonified_df, association, status, chart_type, frequency, month):
+  if jsonified_df is None:
     print("Nothing to show for!")
     raise PreventUpdate
   else:
-    df = chart_helper.decode_json_df(jsonified_login_df)
+    df = chart_helper.decode_json_df(jsonified_df)
     #print(df.head())
     if (association == None):
       if (status == None):
@@ -246,26 +257,35 @@ def update_login_chart_on_filter_change(jsonified_login_df, association, status,
   [Input('association-filter', 'value')],
   [State('jsonified-data-usage-df', 'children')]
 )
-def update_data_chart_course_filter(association, jsonified_data_usage_df):
-  if (jsonified_data_usage_df is None):
+def update_data_chart_course_filter(association, jsonified_df):
+  if (jsonified_df is None):
     raise PreventUpdate
   else:
-    df = chart_helper.decode_json_df(jsonified_data_usage_df)
+    df = chart_helper.decode_json_df(jsonified_df)
     options = chart_helper.get_course_filter_options(df, association)
     return options
 
-#NOTE: display/hide course filter
+#NOTE: enable/disable course filter
 @app.callback(
   Output('data-chart-course-filter', 'disabled'),
   [Input('association-filter', 'value')],
   [State('jsonified-data-usage-df', 'children')]
 )
-def update_data_chart_course_filter(association, jsonified_data_usage_df):
-  if (jsonified_data_usage_df is None) or (association == None):
+def update_data_chart_course_filter(association, jsonified_df):
+  if (jsonified_df is None) or (association == None):
     return True
   else:
     return False
-    
+
+#NOTE: give course filter None value when user selects a new association
+@app.callback(
+  Output('data-chart-course-filter', 'value'),
+  [Input('association-filter', 'value')],
+  [State('jsonified-data-usage-df', 'children')]
+)
+def update_data_chart_course_filter(association, jsonified_df):
+  return None
+  
 
 #NOTE: update usage chart on new filter
 @app.callback(
@@ -275,21 +295,27 @@ def update_data_chart_course_filter(association, jsonified_data_usage_df):
    Input('data-chart-course-filter', 'value')],
   [State('month-filter', 'value')]
 )
-def update_file_usage_chart(jsonified_data_usage_df, association=None, course_id=None, month=None):
-    df = chart_helper.decode_json_df(jsonified_data_usage_df)
-  
-    if (course_id == None) & (association == None):
-        fig = chart_helper.make_aggregate_data_usage_chart(df, association, course_id, month)
-        return fig
-    elif (association != None) & (course_id == None):
-        filtered_df = df[df['association'] == association]
-        fig = chart_helper.make_data_bar_chart_facetted_by(filtered_df, 'course_id', association, course_id, month)
-        return fig
-    else:
-        filt = (df['association'] == association) & (df['course_id'] == course_id)
-        filtered_df = df[filt]
-        fig = chart_helper.make_data_bar_chart_facetted_by(filtered_df, 'paper_id', association, course_id, month)
-        return fig
+def update_file_usage_chart(jsonified_df, association=None, course_id=None, month=None):
+	if jsonified_df is None:
+		raise PreventUpdate
+	else:
+		df = chart_helper.decode_json_df(jsonified_df)
+	
+		if (course_id == None) and (association == None):
+			fig = chart_helper.make_aggregate_data_usage_chart(df, association, course_id, month)
+			return fig
+		elif (association != None) and (course_id == None):
+			filtered_df = df[df['association'] == association]
+			fig = chart_helper.make_data_bar_chart_facetted_by(filtered_df, 'course_id', association, course_id, month)
+			return fig
+		elif (association == None and course_id != None):
+			raise PreventUpdate
+		else:
+    #NOTE: need to use bitwise operator with pandas (can't use And or Or)
+			filt = (df['association'] == association) & (df['course_id'] == course_id)
+			filtered_df = df[filt]
+			fig = chart_helper.make_data_bar_chart_facetted_by(filtered_df, 'paper_id', association, course_id, month)
+			return fig
 
 
 #ANCHOR: cbs for stat boxes: total-logins, total-distinct-users, total-data-usage
@@ -299,7 +325,10 @@ def update_file_usage_chart(jsonified_data_usage_df, association=None, course_id
    Input('association-filter', 'value')]
 )
 def display_total_logins_by_association(jsonified_df, association):
-  return chart_helper.get_total_logins_by_association(jsonified_df, association)
+  if (jsonified_df is None):
+      raise PreventUpdate
+  else:
+    return chart_helper.get_total_logins_by_association(jsonified_df, association)
 
 @app.callback(
   Output('total-distinct-users', 'children'),
@@ -307,7 +336,10 @@ def display_total_logins_by_association(jsonified_df, association):
    Input('association-filter', 'value')]
 )
 def display_total_distinct_users_by_association(jsonified_df, association):
-  return chart_helper.get_total_distinct_users_by_association(jsonified_df, association)
+  if (jsonified_df is None):
+    raise PreventUpdate
+  else:
+    return chart_helper.get_total_distinct_users_by_association(jsonified_df, association)
 
 @app.callback(
   Output('total-new-users-sessions', 'children'),
@@ -315,7 +347,10 @@ def display_total_distinct_users_by_association(jsonified_df, association):
    Input('association-filter', 'value')]
 )
 def display_total_new_users_sessions_by_association(jsonified_df, association):
-  return chart_helper.get_total_new_users_sessions_by_association(jsonified_df, association)
+  if (jsonified_df is None):
+    raise PreventUpdate
+  else:
+    return chart_helper.get_total_new_users_sessions_by_association(jsonified_df, association)
 
 @app.callback(
   Output('total-data-usage', 'children'),
@@ -323,7 +358,10 @@ def display_total_new_users_sessions_by_association(jsonified_df, association):
    Input('association-filter', 'value')]
 )
 def display_total_distinct_users_by_association(jsonified_df, association):
-  return chart_helper.get_total_data_usage_by_association(jsonified_df, association)
+  if (jsonified_df is None):
+    raise PreventUpdate
+  else:
+    return chart_helper.get_total_data_usage_by_association(jsonified_df, association)
 
 @app.callback(
   Output('total-new-resources', 'children'),
@@ -331,13 +369,20 @@ def display_total_distinct_users_by_association(jsonified_df, association):
    Input('association-filter', 'value')]
 )
 def display_total_new_resources_by_association(jsonified_df, association):
-  return chart_helper.get_total_resources_by_association(jsonified_df, association)
+  if (jsonified_df is None):
+    raise PreventUpdate	
+  else:
+    return chart_helper.get_total_resources_by_association(jsonified_df, association)
 
 
 
 #NOTE: run app in debug mode
 if __name__ == '__main__':
   app.run_server(debug=True)
+  
+  '''app.run_server(debug=False,
+                 dev_tools_ui=False,
+                 dev_tools_props_check=False)'''
 
 
 #TODO: https://dash.plotly.com/deployment try to deploy / polish display
