@@ -17,7 +17,6 @@ from pandas import DataFrame
 import json
 import datetime
 
-# helper functions
 month_dict = {
     "January": 1,
     "February": 2,
